@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>바람에 작용하는 힘 — 수업 안내용 시뮬레이션</title>
+<style>
+:root{
+  --font:'a시네마L','a시네마','a시네마M','aCinemaL','Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  --ink:#22324a; --muted:#5b6b82; --panel:#f8fbff; --line:#d5e3f3;
+  --pgf:#e8590c; --cor:#1c7ed6; --cen:#d4a106; --fri:#7048e8; --wind:#2b8a3e; --grav:#868e96; --cfg:#f76707;
+  --accent:#0ca678; --warn:#d6336c; --gold:#f59f00;
+}
+*{box-sizing:border-box;font-weight:normal !important;}
+html,body{margin:0;padding:0;font-family:var(--font);color:var(--ink);}
+body{background:linear-gradient(180deg,#081428 0%,#123a6b 45%,#3f86c9 80%,#8cc6ef 100%);background-attachment:fixed;min-height:100vh;}
+h1,h2,h3,h4,b,strong,th{font-weight:normal;}
+button,input,select,textarea{font-family:var(--font);font-size:15px;}
+canvas{display:block;width:100%;height:auto;border-radius:12px;}
+sub,sup{font-size:.72em;}
+.c-pgf{color:var(--pgf)}.c-cor{color:var(--cor)}.c-cen{color:#b38600}.c-fri{color:var(--fri)}.c-wind{color:var(--wind)}
+.hl{color:#d9480f}.hl2{color:#1971c2}.hl3{color:#0ca678}.ok{color:#2b8a3e}.bad{color:#d6336c}.muted{color:var(--muted)}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.92em;margin:0 3px;line-height:1.15}
+.frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 3px}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:50;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;
+  padding:10px 18px;background:rgba(6,16,34,.88);backdrop-filter:blur(8px);border-bottom:1px solid rgba(140,198,239,.35);color:#e7f5ff;}
+.gtitle{font-size:22px;color:#ffd43b;letter-spacing:1px;white-space:nowrap}
+.gsub{font-size:13px;color:#a5d8ff}
+#stageNav{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+#stageNav button{background:#173a66;color:#d0ebff;border:1px solid #2f6fb0;border-radius:20px;padding:7px 13px;cursor:pointer;transition:.2s}
+#stageNav button.on{background:#ffd43b;color:#3d2c00;border-color:#ffd43b}
+#stageNav button:disabled{opacity:.45;cursor:not-allowed}
+.hudR{display:flex;align-items:center;gap:14px}
+.xpw{min-width:150px;font-size:13px;color:#ffe066}
+.xpbar{height:9px;background:#0d2a4d;border-radius:6px;overflow:hidden;margin-top:3px;border:1px solid #2f6fb0}
+.xpbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd43b,#ff922b);transition:.4s}
+.logoBox{display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:4px 10px 4px 4px}
+.logoBox img{width:48px;height:48px;object-fit:contain}
+.logoBox .mail{font-size:12.5px;color:#1c5d99}
+
+main{max-width:1320px;margin:0 auto;padding:18px 16px 60px}
+.stage{display:none;animation:fade .35s}
+.stage.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.npc{display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.95);border-radius:16px;padding:12px 16px;margin-bottom:14px;border-left:6px solid #ffd43b;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.npc .ava{font-size:40px;line-height:1}
+.npc .who{color:#e67700;font-size:14px;margin-bottom:2px}
+.npc .say{font-size:15.5px;line-height:1.6}
+.stageTitle{color:#fff;font-size:24px;margin:4px 0 10px;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+.stageTitle small{font-size:14px;color:#a5d8ff;margin-left:8px}
+
+.subnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.subnav button{background:rgba(255,255,255,.9);border:2px solid transparent;border-radius:12px;padding:8px 12px;cursor:pointer;color:#1c3d63}
+.subnav button.on{border-color:#ffd43b;background:#fff9db;color:#c25e00}
+.subnav button.done::after{content:' ✔';color:#2b8a3e}
+.subnav button:disabled{opacity:.5;cursor:not-allowed}
+
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+.grid2b{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
+@media (max-width:980px){.grid2,.grid2b{grid-template-columns:1fr}header{grid-template-columns:1fr;}.hudR{justify-content:flex-end}}
+.card{background:var(--panel);border-radius:16px;padding:14px;box-shadow:0 8px 22px rgba(0,0,0,.18);margin-bottom:14px}
+.cardHead{font-size:17px;color:#1864ab;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cardHead .tag{font-size:12px;background:#e7f5ff;color:#1971c2;border-radius:10px;padding:2px 8px}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-top:10px}
+.ctrls label{display:flex;align-items:center;gap:8px;font-size:14.5px;color:#34495e}
+.ctrls input[type=range]{width:150px;accent-color:#1c7ed6}
+.val{min-width:70px;color:#d9480f}
+.seg{display:inline-flex;border-radius:10px;overflow:hidden;border:1px solid #a5c8ec}
+.seg button{background:#fff;border:none;padding:7px 11px;cursor:pointer;color:#1c3d63;border-right:1px solid #d0e3f5}
+.seg button:last-child{border-right:none}
+.seg button.on{background:#1c7ed6;color:#fff}
+.btn{background:#1c7ed6;color:#fff;border:none;border-radius:10px;padding:8px 14px;cursor:pointer;transition:.15s}
+.btn:hover{filter:brightness(1.08)}
+.btn.gold{background:linear-gradient(90deg,#fab005,#fd7e14);color:#3b2400}
+.btn.green{background:#2f9e44}
+.btn.ghost{background:#e7f5ff;color:#1864ab}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.readout{margin-top:10px;background:#fff;border:1px dashed #a5c8ec;border-radius:10px;padding:9px 12px;font-size:14.5px;line-height:1.7}
+.concept{font-size:14.8px;line-height:1.75}
+.concept .eq{background:#fff;border-radius:10px;padding:8px 12px;margin:6px 0;border-left:4px solid #74c0fc;font-size:16px}
+.chk{list-style:none;padding:0;margin:8px 0;display:flex;flex-wrap:wrap;gap:6px}
+.chk li{background:#f1f3f5;border-radius:16px;padding:4px 10px;font-size:13.5px;color:#868e96}
+.chk li.y{background:#d3f9d8;color:#2b8a3e}
+.qbox{background:#fff;border-radius:12px;padding:12px;margin:10px 0;border:1px solid var(--line)}
+.qnum{color:#e67700;font-size:13px}
+.qtext{font-size:15.3px;line-height:1.6;margin-bottom:8px}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{text-align:left;background:#f8f9fa;border:1.5px solid #dee2e6;border-radius:10px;padding:8px 12px;cursor:pointer;color:var(--ink);transition:.15s;line-height:1.5}
+.opt:hover:not(:disabled){border-color:#74c0fc;background:#e7f5ff}
+.opt.right{background:#d3f9d8;border-color:#40c057;color:#1b5e20}
+.opt.wrong{background:#ffe3e3;border-color:#fa5252;color:#a61e4d}
+.opt:disabled{cursor:default}
+.oxrow{display:flex;gap:10px}
+.oxrow .opt{flex:1;text-align:center;font-size:22px}
+.fb{margin-top:8px;font-size:14.5px;line-height:1.6}
+.dragcv{max-width:380px;border:1px solid var(--line);cursor:crosshair;touch-action:none;background:#fff}
+.dhint{font-size:12.5px;color:#868e96;margin-top:4px}
+.orderItems{display:flex;flex-wrap:wrap;gap:6px}
+.orderSeq{min-height:34px;margin:8px 0;padding:6px;border:1px dashed #a5c8ec;border-radius:10px;font-size:14.5px;color:#1864ab}
+.missions{list-style:none;padding:0;margin:0}
+.missions li{display:flex;gap:8px;align-items:flex-start;padding:7px 4px;border-bottom:1px dashed #dee2e6;font-size:14.5px;line-height:1.5}
+.missions li .ic{font-size:18px}
+.missions li.y{color:#2b8a3e}
+.missions li .opt-tag{font-size:11.5px;background:#fff3bf;color:#e67700;border-radius:8px;padding:1px 6px;margin-left:4px}
+table.log{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+table.log th,table.log td{border-bottom:1px solid #e9ecef;padding:5px;text-align:center}
+table.log th{color:#1864ab;background:#e7f5ff}
+.banner{display:none;margin-top:12px;background:linear-gradient(90deg,#fff3bf,#d3f9d8);border-radius:14px;padding:14px;font-size:15.5px;line-height:1.6;border:2px solid #ffd43b}
+.banner.on{display:block;animation:fade .4s}
+table.sum{width:100%;border-collapse:collapse;font-size:15px;line-height:1.6}
+table.sum th{background:#1c7ed6;color:#fff;padding:9px}
+table.sum td{border-bottom:1px solid #dee2e6;padding:9px 10px;vertical-align:top}
+table.sum td:first-child{white-space:nowrap;font-size:17px}
+.bars{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.barRow{display:grid;grid-template-columns:120px 1fr 80px;gap:8px;align-items:center;font-size:14px}
+.barRow .bg{height:16px;background:#e9ecef;border-radius:8px;overflow:hidden}
+.barRow .bg i{display:block;height:100%;border-radius:8px;transition:.4s}
+textarea{width:100%;min-height:90px;border-radius:10px;border:1.5px solid #a5c8ec;padding:10px;font-size:15px;line-height:1.6;resize:vertical}
+.kw{display:inline-block;border-radius:8px;padding:1px 8px;margin:2px;font-size:13.5px}
+.kw.y{background:#d3f9d8;color:#2b8a3e}.kw.n{background:#ffe3e3;color:#c2255c}
+.model{margin-top:8px;background:#f3f0ff;border-radius:10px;padding:8px 12px;font-size:14px;color:#5f3dc4;line-height:1.6}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(120px);background:#1b2b44;color:#fff;padding:12px 20px;border-radius:14px;z-index:200;transition:.35s;box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:15px;border:1px solid #ffd43b}
+#toast.on{transform:translateX(-50%) translateY(0)}
+
+/* intro */
+#intro{position:fixed;inset:0;z-index:300;background:radial-gradient(circle at 50% 30%,#1d4f8c,#06111f 75%);display:flex;align-items:center;justify-content:center;padding:20px}
+#intro .box{max-width:720px;background:rgba(255,255,255,.97);border-radius:22px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative}
+#intro h1{margin:0 0 6px;color:#1864ab;font-size:30px}
+#intro .story{font-size:15.5px;line-height:1.8;margin:10px 0 16px}
+#intro input{border:1.5px solid #a5c8ec;border-radius:10px;padding:9px 12px;width:100%;margin-top:4px}
+#intro .road{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+#intro .road span{background:#e7f5ff;color:#1971c2;border-radius:10px;padding:5px 10px;font-size:13.5px}
+#intro .lg{position:absolute;right:18px;top:16px;text-align:center;font-size:12px;color:#1c5d99}
+#intro .lg img{width:64px;display:block;margin:0 auto}
+
+/* result */
+.gradeBig{font-size:96px;line-height:1;text-align:center}
+.gA{color:#2b8a3e}.gB{color:#1c7ed6}.gC{color:#f08c00}.gD{color:#e8590c}.gF{color:#c92a2a}
+.fbPara{font-size:15px;line-height:1.85;margin:8px 0;text-indent:.5em}
+.remed{background:#fff9db;border:1.5px solid #ffd43b;border-radius:12px;padding:10px 12px;margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14.5px;line-height:1.55}
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff !important}
+  header,main,#intro,#toast{display:none !important}
+  #printArea{display:block !important;color:#222;font-family:var(--font)}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+.pa-head{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #1c7ed6;padding-bottom:8px;margin-bottom:12px}
+.pa-head img{width:60px}
+.pa-sec{margin:10px 0;page-break-inside:avoid}
+.pa-sec h3{color:#1864ab;font-size:17px;margin:6px 0}
+
+.hbtn{background:#173a66;color:#d0ebff;border:1px solid #2f6fb0;border-radius:20px;padding:7px 13px;cursor:pointer}
+.hbtn:hover{background:#ffd43b;color:#3d2c00}
+body.big .concept,body.big .qtext,body.big .readout,body.big .opt{font-size:18px}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="gtitle">🌬️ 바람에 작용하는 힘</div><div class="gsub">지균풍·경도풍 학습 전 개념 안내 · 수업 시연용 (북반구 기준)</div></div>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+    <button class="hbtn" id="btnBig">🔍 글자 크게</button><button class="hbtn" id="btnFull">⛶ 전체 화면</button><button class="hbtn" id="btnReset">🔄 문항 초기화</button>
+  </div>
+  <div class="hudR"><div class="logoBox"><img src="data:image/png;base64,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" alt="EARTH LJY 로고"><div class="mail">earthljy@ai.jne.kr</div></div></div>
+</header>
+<main>
+<section class="stage on" id="st0">
+  <div class="stageTitle">바람에 작용하는 힘 <small>정역학 평형과 4가지 힘 — 기압 경도력 · 전향력 · 구심력 · 마찰력</small></div>
+  <div class="npc"><div class="ava">🧑‍✈️</div><div><div class="who">기장 바람이</div><div class="say" id="npc0">상층 바람을 읽기 전에, 바람에 작용하는 네 가지 힘부터 점검하자. 각 탭에서 <span class="hl">실험 조작</span>을 해 보고 <span class="hl2">체크포인트</span> 문제로 개념을 확인해 보자!</div></div></div>
+  <div class="subnav" id="s0nav">
+    <button data-t="pgf">① 기압 경도력</button>
+    <button data-t="cor">② 전향력</button>
+    <button data-t="cen">③ 구심력</button>
+    <button data-t="fri">④ 마찰력</button>
+    <button data-t="bridge">⑤ 고도 브릿지</button>
+  </div>
+
+  <!-- PGF -->
+  <div class="tab" id="t-pgf">
+    <div class="grid2">
+      <div class="card">
+        <div class="cardHead">미니 실험실 · 기압 경도력 <span class="tag">등압선 간격 조절기</span></div>
+        <canvas id="cvPgf" width="640" height="400"></canvas>
+        <div class="ctrls">
+          <div class="seg"><button id="pgfH" class="on">수평 · 등압선 지도</button><button id="pgfV">연직 단면 보기</button></div>
+          <label>기압 차 ΔP <input type="range" id="pgfDP" min="2" max="8" step="1" value="4"><span class="val" id="pgfDPv"></span></label>
+          <label>등압선 간격 ΔH <input type="range" id="pgfDH" min="100" max="500" step="50" value="300"><span class="val" id="pgfDHv"></span></label>
+        </div>
+        <div class="readout" id="pgfRead"></div>
+      </div>
+      <div>
+        <div class="card concept">
+          <div class="cardHead">핵심 개념</div>
+          기압이 높은 곳에서 낮은 곳으로 <span class="c-pgf">등압선에 직각 방향</span>으로 작용하며, 바람을 일으키는 근본적인 힘이에요.
+          <div class="eq">수평 기압 경도력 : <span class="c-pgf">P<sub>H</sub></span> = <span class="frac"><span>1</span><span>ρ</span></span>·<span class="frac"><span>ΔP</span><span>ΔH</span></span></div>
+          연직 방향으로는 기압 차가 훨씬 크지만, 연직 기압 경도력이 <span class="hl2">중력</span>과 평형을 이루어 상쇄돼요. 이를 <span class="hl">정역학 평형</span>(ΔP = ρgΔz)이라고 해요.
+          <ul class="chk" id="chk-pgf"></ul>
+        </div>
+        <div class="card"><div class="cardHead">체크포인트</div><div class="qbox" id="q-pgf1"></div><div class="qbox" id="q-pgf2"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COR -->
+  <div class="tab" id="t-cor">
+    <div class="grid2">
+      <div class="card">
+        <div class="cardHead">미니 실험실 · 전향력 <span class="tag">가상 회전 원판 실험</span></div>
+        <canvas id="cvCor" width="640" height="420"></canvas>
+        <div class="ctrls">
+          <div class="seg" id="corHemi"><button data-v="N" class="on">북반구 (반시계 회전)</button><button data-v="S">남반구 (시계 회전)</button></div>
+          <div class="seg" id="corLat"><button data-v="0">적도 0°</button><button data-v="30" class="on">30°</button><button data-v="60">60°</button><button data-v="90">극 90°</button></div>
+          <div class="seg" id="corView"><button data-v="rot" class="on">원판 위 관찰자</button><button data-v="in">우주 관찰자</button></div>
+          <button class="btn gold" id="corGo">🎯 구슬 발사</button>
+          <button class="btn ghost" id="corClr">궤적 지우기</button>
+        </div>
+        <div class="readout" id="corRead"></div>
+      </div>
+      <div>
+        <div class="card concept">
+          <div class="cardHead">핵심 개념</div>
+          지구 자전 때문에 나타나는 <span class="hl">겉보기 힘</span>으로, 물체의 <span class="hl2">속력은 바꾸지 않고 운동 방향만</span> 바꿔요.
+          북반구에서는 진행 방향의 <span class="c-cor">오른쪽 직각</span>, 남반구에서는 <span class="c-cor">왼쪽 직각</span>으로 작용해요.
+          <div class="eq">전향력 : <span class="c-cor">C</span> = 2vΩ sinφ &nbsp; <span class="muted">(Ω ≈ 7.29 × 10⁻⁵ rad/s)</span></div>
+          위도별(0°, 30°, 60°, 90°)로 구슬을 발사해 휘는 정도를 비교해 보세요. 원판의 회전 빠르기는 sinφ에 비례하도록 설정했어요.
+          <ul class="chk" id="chk-cor"></ul>
+        </div>
+        <div class="card"><div class="cardHead">체크포인트</div><div class="qbox" id="q-cor1"></div><div class="qbox" id="q-cor2"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CEN -->
+  <div class="tab" id="t-cen">
+    <div class="grid2">
+      <div class="card">
+        <div class="cardHead">미니 실험실 · 구심력 <span class="tag">반지름·속력 조작 / 시점 전환</span></div>
+        <canvas id="cvCen" width="640" height="400"></canvas>
+        <div class="ctrls">
+          <label>반지름 r <input type="range" id="cenR" min="70" max="170" step="5" value="120"><span class="val" id="cenRv"></span></label>
+          <label>속력 v <input type="range" id="cenV" min="1" max="10" step="1" value="5"><span class="val" id="cenVv"></span></label>
+          <div class="seg" id="cenView"><button data-v="ext" class="on">외부 관찰자</button><button data-v="rid">공기 덩어리 탑승자</button></div>
+        </div>
+        <div class="readout" id="cenRead"></div>
+      </div>
+      <div>
+        <div class="card concept">
+          <div class="cardHead">핵심 개념</div>
+          원형 등압선 부근에서 바람이 곡선을 그리며 불 때, <span class="c-cen">회전 중심 방향</span>으로 작용해 운동 방향을 휘게 하는 힘이에요.
+          <div class="eq">구심력 : <span class="c-cen">F<sub>c</sub></span> = <span class="frac"><span>v²</span><span>r</span></span></div>
+          구심력은 독립된 힘이 아니라 작용하는 힘들의 <span class="hl">합력</span>, 즉 <span class="c-pgf">기압 경도력</span>과 <span class="c-cor">전향력</span>의 차이로 나타나요.
+          함께 도는 탑승자에게는 크기가 같고 방향이 반대인 <span class="hl2">원심력</span>(겉보기 힘)이 느껴져요.
+          <ul class="chk" id="chk-cen"></ul>
+        </div>
+        <div class="card"><div class="cardHead">체크포인트</div><div class="qbox" id="q-cen1"></div><div class="qbox" id="q-cen2"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FRI -->
+  <div class="tab" id="t-fri">
+    <div class="grid2">
+      <div class="card">
+        <div class="cardHead">미니 실험실 · 마찰력 <span class="tag">지표면 재질 선택기</span></div>
+        <canvas id="cvFri" width="640" height="400"></canvas>
+        <div class="ctrls">
+          <div class="seg" id="friSurf"><button data-v="sea" class="on">🌊 바다</button><button data-v="plain">🌾 평지</button><button data-v="forest">🌲 산림</button><button data-v="city">🏙️ 도심</button></div>
+        </div>
+        <div class="readout" id="friRead"></div>
+        <table class="log" id="friLog"><tr><th>지표면</th><th>마찰 계수 k</th><th>풍속</th><th>경각</th></tr></table>
+      </div>
+      <div>
+        <div class="card concept">
+          <div class="cardHead">핵심 개념</div>
+          지표면과의 마찰로 <span class="c-fri">바람 방향과 반대 방향</span>으로 작용하여 풍속을 감소시키는 힘이에요.
+          <div class="eq">마찰력 : <span class="c-fri">F<sub>r</sub></span> = kv &nbsp;<span class="muted">(k : 마찰 계수, 거친 육지 > 매끄러운 해양)</span></div>
+          마찰력 때문에 풍속이 줄면 풍속에 비례하는 <span class="c-cor">전향력</span>도 줄어들어, 바람이 등압선을 비스듬히 가로질러 저기압 쪽으로 불어요(<span class="hl">경각</span> 발생).
+          <ul class="chk" id="chk-fri"></ul>
+        </div>
+        <div class="card"><div class="cardHead">체크포인트</div><div class="qbox" id="q-fri1"></div><div class="qbox" id="q-fri2"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRIDGE -->
+  <div class="tab" id="t-bridge">
+    <div class="grid2b">
+      <div class="card">
+        <div class="cardHead">⑤ 고도 브릿지 · 높이에 따른 풍속과 마찰력 변화 <span class="tag">고도 슬라이더를 1 km 위로!</span></div>
+        <canvas id="cvBr" width="680" height="400"></canvas>
+        <div class="ctrls">
+          <label>고도 z <input type="range" id="brZ" min="0" max="2" step="0.05" value="0.1" style="width:260px"><span class="val" id="brZv"></span></label>
+          <div class="seg" id="brSurf"><button data-v="sea" class="on">🌊 바다</button><button data-v="plain">🌾 평지</button><button data-v="city">🏙️ 도심</button></div>
+        </div>
+        <div class="readout" id="brRead"></div>
+        <div class="banner" id="brMsg">🎉 <span class="hl">마찰력이 없는 자유 대기에 도달했습니다.</span> 이제 상층의 바람(<span class="hl2">지균풍·경도풍</span>)을 탐구해 봅시다.
+          <div style="margin-top:6px" class="muted">약 1 km 이상의 자유 대기에서는 기압 경도력·전향력·(곡선일 때) 구심력만으로 바람이 결정돼요.</div></div>
+      </div>
+      <div class="card concept">
+        <div class="cardHead">대기 경계층과 자유 대기</div>
+        <div class="eq">0 ~ 약 1 km : <span class="c-fri">대기 경계층</span> — 마찰력 작용, 지상풍</div>
+        고도가 낮을수록 마찰력이 커서 풍속이 느리고, 바람이 등압선을 비스듬히 가로질러요. 지표면이 거친 <span class="hl">도심</span>일수록 마찰의 영향이 미치는 높이(대기 경계층)가 높아요. 왼쪽 그래프에서 세 지표면의 풍속 분포를 비교해 보세요.
+        <div class="eq">약 1 km 이상 : <span class="hl2">자유 대기</span> — 마찰력 ≈ 0</div>
+        마찰력이 사라지면 <span class="c-pgf">기압 경도력</span>, <span class="c-cor">전향력</span>, (곡선일 때) <span class="c-cen">구심력</span>만으로 바람이 결정돼요. 이것이 바로 지균풍과 경도풍의 무대예요.
+        <ul class="chk" id="chk-bridge"></ul>
+      </div>
+    </div>
+  </div>
+
+  </section>
+</main>
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   공통 유틸
+   ===================================================================== */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const FONT="'a시네마L','a시네마','a시네마M','aCinemaL','Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif";
+const OMEGA=7.29e-5, D2R=Math.PI/180;
+const COL={pgf:'#e8590c',cor:'#1c7ed6',cen:'#d4a106',fri:'#7048e8',wind:'#2b8a3e',grav:'#868e96',cfg:'#f76707'};
+const LOGO_SRC=document.querySelector('.logoBox img').src;
+
+function arrow(c,x1,y1,x2,y2,color,w=4,label,alpha=1){
+  const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy); if(L<3) return;
+  const ux=dx/L,uy=dy/L,hs=Math.min(13,L*0.5)+w*0.8;
+  c.save(); c.globalAlpha=alpha; c.strokeStyle=color; c.fillStyle=color; c.lineWidth=w; c.lineCap='round';
+  c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2-ux*hs*0.7,y2-uy*hs*0.7); c.stroke();
+  c.beginPath(); c.moveTo(x2,y2); c.lineTo(x2-ux*hs-uy*hs*0.55,y2-uy*hs+ux*hs*0.55); c.lineTo(x2-ux*hs+uy*hs*0.55,y2-uy*hs-ux*hs*0.55); c.closePath(); c.fill();
+  c.restore();
+  if(label) haloText(c,label,x2+ux*20,y2+uy*16,color,14);
+}
+function haloText(c,t,x,y,color,size=15,align='center'){
+  c.save(); c.font=size+'px '+FONT; c.textAlign=align; c.textBaseline='middle';
+  c.lineWidth=4; c.strokeStyle='rgba(255,255,255,.93)'; c.lineJoin='round'; c.strokeText(t,x,y); c.fillStyle=color; c.fillText(t,x,y); c.restore();
+}
+function txt(c,t,x,y,color='#22324a',size=15,align='left'){c.save();c.font=size+'px '+FONT;c.textAlign=align;c.textBaseline='middle';c.fillStyle=color;c.fillText(t,x,y);c.restore();}
+function dot(c,x,y,r,fill,stroke){c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fillStyle=fill;c.fill();if(stroke){c.lineWidth=2;c.strokeStyle=stroke;c.stroke();}}
+function sci(v,d=2){ if(v===0) return '0'; const e=Math.floor(Math.log10(Math.abs(v))); const m=v/Math.pow(10,e); return m.toFixed(d)+' × 10<sup>'+e+'</sup>'; }
+function toast(m){const t=$('#toast'); t.innerHTML=m; t.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('on'),2600);}
+function seg(id,cb){ $$('#'+id+' button').forEach(b=>b.onclick=()=>{ $$('#'+id+' button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); cb(b.dataset.v); }); }
+function canvasPt(cv,e){const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];}
+function angDiff(a,b){let d=Math.abs(a-b)%360; return d>180?360-d:d;}
+
+
+/* ---------------- 상태 ---------------- */
+const S={s0tab:'pgf',ans:{},inter:{pgf:{slide:false,vert:false},cor:new Set(),cen:{r:false,v:false,view:false},fri:new Set()},bridge:false};
+const R={}; const done=k=>!!(S.ans[k]&&S.ans[k].done); function addXP(){}
+function markAnswer(k,correct){const a=S.ans[k]||(S.ans[k]={first:null,done:false,tries:0}); a.tries++; if(a.first===null)a.first=correct; if(correct&&!a.done){a.done=true; toast(a.tries===1?'⭐ 정답!':'👍 정답!');} refresh();}
+
+/* ---------- 문항 위젯 ---------- */
+function renderMCQ(k,q){
+  R[k]=()=>{
+    const el=document.getElementById('q-'+k); if(!el) return;
+    el.innerHTML=`${q.tag?`<div class="qnum">${q.tag}</div>`:''}<div class="qtext">${q.q}</div><div class="opts">${q.o.map((t,i)=>`<button class="opt" data-i="${i}">${'①②③④⑤'[i]} ${t}</button>`).join('')}</div><div class="fb"></div>`;
+    const fb=el.querySelector('.fb'), bs=[...el.querySelectorAll('.opt')];
+    const fin=()=>{bs.forEach(b=>b.disabled=true); bs[q.a].classList.add('right'); fb.innerHTML=`<span class="ok">정답이에요!</span> ${q.ex}`;};
+    if(done(k)){fin();return;}
+    bs.forEach(b=>b.onclick=()=>{const i=+b.dataset.i;
+      if(i===q.a){fin(); markAnswer(k,true);}
+      else{b.classList.add('wrong'); b.disabled=true; const f=(q.fb&&typeof q.fb==='object')?(q.fb[i]||q.hint):q.fb; fb.innerHTML=`<span class="bad">다시 생각해 봐요.</span> ${f||''}`; markAnswer(k,false);}
+    });
+  }; R[k]();
+}
+function renderOX(k,q){
+  R[k]=()=>{
+    const el=document.getElementById('q-'+k);
+    el.innerHTML=`<div class="qnum">${q.tag}</div><div class="qtext">“${q.s}”</div><div class="oxrow"><button class="opt" data-v="O">⭕</button><button class="opt" data-v="X">❌</button></div><div class="fb"></div>`;
+    const fb=el.querySelector('.fb'), bs=[...el.querySelectorAll('.opt')];
+    const fin=()=>{bs.forEach(b=>{b.disabled=true; if(b.dataset.v===q.a) b.classList.add('right');}); fb.innerHTML=`<span class="ok">정답 : ${q.a}</span> — ${q.ex}`;};
+    if(done(k)){fin();return;}
+    bs.forEach(b=>b.onclick=()=>{ if(b.dataset.v===q.a){fin(); markAnswer(k,true);} else {b.classList.add('wrong'); b.disabled=true; fb.innerHTML=`<span class="bad">아쉬워요!</span> ${q.fb}`; markAnswer(k,false);} });
+  }; R[k]();
+}
+function renderDrag(k,cfg){
+  R[k]=()=>{
+    const el=document.getElementById('q-'+k);
+    el.innerHTML=`<div class="qnum">${cfg.tag}</div><div class="qtext">${cfg.q}</div><canvas class="dragcv" width="360" height="260"></canvas><div class="dhint">● 공기 덩어리에서 원하는 방향으로 드래그하세요 (허용 오차 ±25°)</div><div class="fb"></div>`;
+    const cv=el.querySelector('canvas'), c=cv.getContext('2d'), fb=el.querySelector('.fb');
+    const [ox,oy]=cfg.o||[180,130];
+    const base=()=>{c.clearRect(0,0,360,260); c.fillStyle='#f8fbff'; c.fillRect(0,0,360,260); cfg.draw(c); dot(c,ox,oy,8,'#fff','#22324a');};
+    const showAns=(ok)=>{base(); const a=cfg.ans*D2R; arrow(c,ox,oy,ox+Math.cos(a)*85,oy+Math.sin(a)*85,cfg.color,5,cfg.label);};
+    base();
+    if(done(k)){showAns(true); fb.innerHTML=`<span class="ok">정답이에요!</span> ${cfg.ex}`; return;}
+    let drag=false;
+    cv.onpointerdown=e=>{drag=true; cv.setPointerCapture(e.pointerId);};
+    cv.onpointermove=e=>{if(!drag) return; const [x,y]=canvasPt(cv,e); base(); arrow(c,ox,oy,x,y,'#495057',4);};
+    cv.onpointerup=e=>{ if(!drag) return; drag=false; const [x,y]=canvasPt(cv,e); if(Math.hypot(x-ox,y-oy)<25){base(); return;}
+      const ang=Math.atan2(y-oy,x-ox)/D2R;
+      if(angDiff(ang,cfg.ans)<=25){ showAns(true); fb.innerHTML=`<span class="ok">정답이에요!</span> ${cfg.ex}`; cv.onpointerdown=null; cv.onpointermove=null; cv.onpointerup=null; markAnswer(k,true);}
+      else { base(); arrow(c,ox,oy,x,y,'#fa5252',4); fb.innerHTML=`<span class="bad">방향이 달라요.</span> ${cfg.fb}`; markAnswer(k,false);} };
+  }; R[k]();
+}
+function renderOrder(k,cfg){
+  R[k]=()=>{
+    const el=document.getElementById('q-'+k);
+    el.innerHTML=`<div class="qnum">${cfg.tag}</div><div class="qtext">${cfg.q}</div><div class="orderItems">${cfg.show.map(i=>`<button class="opt" data-i="${i}">${cfg.items[i]}</button>`).join('')}</div><div class="orderSeq">선택 순서 : </div><button class="btn ghost" style="padding:4px 10px">초기화</button><div class="fb"></div>`;
+    const seqEl=el.querySelector('.orderSeq'), fb=el.querySelector('.fb'), bs=[...el.querySelectorAll('.opt')], rst=el.querySelector('.btn');
+    let seq=[];
+    const draw=()=>{seqEl.innerHTML='선택 순서 : '+seq.map((i,n)=>`<span class="hl2">${n+1}. ${cfg.items[i]}</span>`).join(' → ');};
+    if(done(k)){seq=cfg.items.map((_,i)=>i); draw(); bs.forEach(b=>{b.disabled=true;b.classList.add('right');}); rst.style.display='none'; fb.innerHTML=`<span class="ok">정답이에요!</span> ${cfg.ex}`; return;}
+    rst.onclick=()=>{seq=[]; bs.forEach(b=>{b.disabled=false;b.classList.remove('wrong');}); draw(); fb.innerHTML='';};
+    bs.forEach(b=>b.onclick=()=>{ seq.push(+b.dataset.i); b.disabled=true; draw();
+      if(seq.length===cfg.items.length){ const ok=seq.every((v,i)=>v===i);
+        if(ok){bs.forEach(x=>x.classList.add('right')); rst.style.display='none'; fb.innerHTML=`<span class="ok">정답이에요!</span> ${cfg.ex}`; markAnswer(k,true);}
+        else {bs.forEach(x=>x.classList.add('wrong')); fb.innerHTML=`<span class="bad">순서를 다시 생각해 봐요.</span> ${cfg.fb} <span class="muted">(초기화 후 다시 선택)</span>`; markAnswer(k,false);} } });
+  }; R[k]();
+}
+
+
+function goTab(t){ S.s0tab=t; $$('#st0 .tab').forEach(x=>x.style.display=(x.id==='t-'+t)?'block':'none'); $$('#s0nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); refresh(); }
+$$('#s0nav button').forEach(b=>b.onclick=()=>goTab(b.dataset.t));
+$('#btnBig').onclick=()=>document.body.classList.toggle('big');
+$('#btnFull').onclick=()=>{ if(!document.fullscreenElement) document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); else document.exitFullscreen(); };
+$('#btnReset').onclick=()=>{ if(!confirm('모든 문항과 체험 기록을 초기화할까요? (다음 반 수업용)')) return; Object.keys(S.ans).forEach(k=>delete S.ans[k]); S.inter={pgf:{slide:false,vert:false},cor:new Set(),cen:{r:false,v:false,view:false},fri:new Set(['sea'])}; S.bridge=false; $('#brMsg').classList.remove('on'); Object.values(R).forEach(f=>f()); corTrails=[]; updFriLog(); refresh(); toast('🔄 초기화했어요'); };
+
+/* =====================================================================
+   STEP 0-1 기압 경도력
+   ===================================================================== */
+const cvPgf=$('#cvPgf'), xPgf=cvPgf.getContext('2d'); let pgfMode='H', pgfT=0;
+$('#pgfH').onclick=()=>{pgfMode='H';$('#pgfH').classList.add('on');$('#pgfV').classList.remove('on');};
+$('#pgfV').onclick=()=>{pgfMode='V';$('#pgfV').classList.add('on');$('#pgfH').classList.remove('on'); S.inter.pgf.vert=true; refresh();};
+['pgfDP','pgfDH'].forEach(id=>$('#'+id).oninput=()=>{S.inter.pgf.slide=true; refresh();});
+function pgfTick(dt){
+  pgfT+=dt; const c=xPgf,W=640,H=400; const dP=+$('#pgfDP').value, dH=+$('#pgfDH').value;
+  $('#pgfDPv').textContent=dP+' hPa'; $('#pgfDHv').textContent=dH+' km';
+  const PH=dP*100/(1.2*dH*1000);
+  c.clearRect(0,0,W,H);
+  if(pgfMode==='H'){
+    const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#d0ebff'); g.addColorStop(1,'#fff0e0'); c.fillStyle=g; c.fillRect(0,0,W,H);
+    const sp=40+(dH-100)*0.2, cy=200;
+    for(let k=-6;k<=6;k++){const y=cy+(k+0.5)*sp; if(y<14||y>H-14) continue; c.strokeStyle='#495057'; c.lineWidth=1.8; c.beginPath(); c.moveTo(88,y); c.lineTo(W-20,y); c.stroke(); txt(c,(1000+k*dP)+' hPa',10,y,'#495057',13);}
+    haloText(c,'저 (L)',W-60,24,'#d6336c',20); haloText(c,'고 (H)',W-60,H-22,'#1c7ed6',20);
+    // ΔH bracket
+    const y1=cy-0.5*sp,y2=cy+0.5*sp; c.strokeStyle='#868e96'; c.lineWidth=1.5; c.beginPath(); c.moveTo(470,y1); c.lineTo(480,y1); c.lineTo(480,y2); c.lineTo(470,y2); c.stroke();
+    txt(c,'ΔH = '+dH+' km',488,cy,'#5b6b82',14);
+    const ratio=PH/(400/(1.2*300000)); const L=10+160*ratio/(ratio+1.2); const pulse=1+0.05*Math.sin(pgfT*4);
+    dot(c,330,cy,11,'#fff','#22324a');
+    arrow(c,330,cy-12,330,cy-12-L*pulse,COL.pgf,6,'기압 경도력');
+    // drifting particles
+    for(let i=0;i<14;i++){const px=120+i*36, py=H-((pgfT*(20+40*ratio)+i*53)%H); dot(c,px,py,2.2,'rgba(232,89,12,.35)');}
+  } else {
+    const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#1c3d6e'); g.addColorStop(1,'#a5d8ff'); c.fillStyle=g; c.fillRect(0,0,W,H);
+    c.fillStyle='#8d6e4a'; c.fillRect(0,H-26,W,26); txt(c,'지표면',16,H-13,'#fff',13);
+    const levels=[[1000,H-30],[900,H-110],[800,H-185],[700,H-252],[600,H-312],[500,H-362]];
+    levels.forEach(([p,y])=>{c.setLineDash([6,6]); c.strokeStyle='rgba(255,255,255,.55)'; c.lineWidth=1; c.beginPath(); c.moveTo(70,y); c.lineTo(W-10,y); c.stroke(); c.setLineDash([]); txt(c,p+' hPa',8,y,'#fff',12);});
+    const by=190+Math.sin(pgfT*2)*3;
+    c.fillStyle='rgba(255,255,255,.88)'; c.strokeStyle='#22324a'; c.lineWidth=2; c.beginPath(); c.roundRect(200,by-32,90,64,10); c.fill(); c.stroke();
+    txt(c,'공기 덩어리',245,by,'#22324a',13,'center');
+    arrow(c,245,by-34,245,by-130,COL.pgf,7); haloText(c,'연직 기압 경도력 (위)',245,by-145,COL.pgf,15);
+    arrow(c,245,by+34,245,by+130,'#495057',7); haloText(c,'중력 (아래)',245,by+146,'#343a40',15);
+    const vert=12, hor=dP*100/(dH*1000); const r=Math.round(vert/hor);
+    c.fillStyle='rgba(255,255,255,.95)'; c.beginPath(); c.roundRect(350,40,270,180,12); c.fill();
+    txt(c,'연직 : 100 m 높이에 약 12 hPa 차이',364,66,'#e8590c',14);
+    txt(c,`수평 : ${dH} km 거리에 ${dP} hPa 차이`,364,94,'#1c7ed6',14);
+    txt(c,`→ 연직 기압 경도가 약 ${r.toLocaleString()}배 큼!`,364,124,'#d6336c',14);
+    txt(c,'그런데도 위로 강하게 불지 않는 까닭?',364,158,'#22324a',14);
+    txt(c,'ΔP = ρgΔz (정역학 평형)',364,190,'#2b8a3e',16);
+  }
+  $('#pgfRead').innerHTML=`수평 기압 경도력 <span class="c-pgf">P<sub>H</sub> = (1/ρ)(ΔP/ΔH) = ${sci(PH)} m/s²</span> <span class="muted">(지상 공기 밀도 ρ = 1.2 kg/m³)</span><br>등압선 간격이 <span class="hl">좁을수록</span>, 기압 차가 <span class="hl">클수록</span> 화살표가 길어져요.`;
+}
+
+/* =====================================================================
+   STEP 0-2 전향력 (회전 원판)
+   ===================================================================== */
+const cvCor=$('#cvCor'), xCor=cvCor.getContext('2d');
+let corHemi='N', corLat=30, corView='rot', corTheta=0, marble=null, corTrails=[];
+const LATCOL={0:'#868e96',30:'#1c7ed6',60:'#7048e8',90:'#d6336c'};
+seg('corHemi',v=>{corHemi=v;}); seg('corLat',v=>{corLat=+v;}); seg('corView',v=>{corView=v;});
+$('#corGo').onclick=()=>{marble={t:0,th0:corTheta,rp:[],ip:[],lat:corLat,hemi:corHemi}; S.inter.cor.add(corLat); refresh();};
+$('#corClr').onclick=()=>{corTrails=[];};
+function corTick(dt){
+  const c=xCor,W=640,H=420,cx=250,cy=212,Rd=185;
+  const w=1.0*Math.sin(corLat*D2R)*(corHemi==='N'?1:-1);
+  corTheta+=w*dt;
+  if(marble){ marble.t+=dt; const r=125*marble.t, a=Math.PI/2+marble.th0;
+    if(r>Rd-6){ corTrails.push({rp:marble.rp,lat:marble.lat,hemi:marble.hemi}); if(corTrails.length>8) corTrails.shift(); marble=null; }
+    else { const X=r*Math.cos(a), Y=r*Math.sin(a); marble.ip.push([X,Y]); const b=a-corTheta; marble.rp.push([r*Math.cos(b),r*Math.sin(b)]); }
+  }
+  c.clearRect(0,0,W,H); c.fillStyle='#0b1a33'; c.fillRect(0,0,W,H);
+  for(let i=0;i<40;i++){dot(c,(i*97)%W,(i*53)%H,1.1,'rgba(255,255,255,.5)');}
+  const rot=(corView==='in')?corTheta:0; // 디스크 그리기 회전(수학적 반시계)
+  const P=(X,Y,extra=0)=>{const ca=Math.cos(extra),sa=Math.sin(extra); const x=X*ca-Y*sa, y=X*sa+Y*ca; return [cx+x,cy-y];};
+  // disk
+  const g=c.createRadialGradient(cx,cy,10,cx,cy,Rd); g.addColorStop(0,'#e7f5ff'); g.addColorStop(1,'#a5d8ff'); c.fillStyle=g; c.beginPath(); c.arc(cx,cy,Rd,0,Math.PI*2); c.fill();
+  c.strokeStyle='rgba(28,126,214,.35)'; c.lineWidth=1;
+  for(let i=0;i<12;i++){const a=i*Math.PI/6; const [x,y]=P(Rd*Math.cos(a),Rd*Math.sin(a),rot); c.beginPath(); c.moveTo(cx,cy); c.lineTo(x,y); c.stroke();}
+  [60,120].forEach(rr=>{c.beginPath();c.arc(cx,cy,rr,0,Math.PI*2);c.stroke();});
+  // target flag
+  const [tx,ty]=P(0,Rd-14,rot); haloText(c,'🚩',tx,ty,'#c92a2a',20);
+  // trails (disk-fixed)
+  const drawTrail=(pts,col,wd)=>{ if(pts.length<2) return; c.strokeStyle=col; c.lineWidth=wd; c.beginPath(); pts.forEach(([X,Y],i)=>{const [x,y]=P(X,Y,rot); i?c.lineTo(x,y):c.moveTo(x,y);}); c.stroke(); };
+  corTrails.forEach(t=>drawTrail(t.rp,LATCOL[t.lat],3));
+  if(marble){
+    if(corView==='rot'){ drawTrail(marble.rp,LATCOL[marble.lat],4); const [X,Y]=marble.rp[marble.rp.length-1]||[0,0]; const [x,y]=P(X,Y,0); dot(c,x,y,8,'#fa5252','#fff'); }
+    else { c.strokeStyle='#fa5252'; c.lineWidth=3; c.setLineDash([5,5]); c.beginPath(); marble.ip.forEach(([X,Y],i)=>{const x=cx+X,y=cy-Y; i?c.lineTo(x,y):c.moveTo(x,y);}); c.stroke(); c.setLineDash([]); const [X,Y]=marble.ip[marble.ip.length-1]||[0,0]; dot(c,cx+X,cy-Y,8,'#fa5252','#fff'); }
+  }
+  dot(c,cx,cy,7,'#22324a');
+  // rotation indicator
+  c.strokeStyle='#ffd43b'; c.lineWidth=3; c.beginPath(); const ccw=corHemi==='N';
+  c.arc(cx,cy,Rd+12,-Math.PI*0.35,-Math.PI*0.65,ccw); c.stroke();
+  const ea=-Math.PI*0.65; const ex=cx+(Rd+12)*Math.cos(ea), ey=cy+(Rd+12)*Math.sin(ea);
+  if(corLat>0) arrow(c,ex+(ccw?8:-8)*0,ey,ex+(ccw?-10:10),ey+4,'#ffd43b',3);
+  // legend
+  c.fillStyle='rgba(255,255,255,.95)'; c.beginPath(); c.roundRect(452,14,176,190,12); c.fill();
+  txt(c,corHemi==='N'?'북반구 모형 (반시계)':'남반구 모형 (시계)',464,36,'#1864ab',14);
+  txt(c,`위도 ${corLat}° · sinφ = ${Math.sin(corLat*D2R).toFixed(2)}`,464,60,'#d9480f',14);
+  txt(c,corView==='rot'?'시점 : 원판 위 관찰자':'시점 : 우주 관찰자',464,84,'#5b6b82',13);
+  [0,30,60,90].forEach((l,i)=>{c.fillStyle=LATCOL[l]; c.fillRect(466,106+i*22,22,5); txt(c,(l===0?'적도 ':'')+l+'° 궤적',496,109+i*22,'#22324a',13);});
+  if(corLat===0) haloText(c,'적도 : sin0° = 0 → 전향력 0, 곧게 직진!',250,H-14,'#c92a2a',15);
+  else haloText(c,corView==='rot'?(corHemi==='N'?'진행 방향의 오른쪽으로 휘어요':'진행 방향의 왼쪽으로 휘어요'):'우주에서 보면 구슬은 곧게 날아가요 (원판이 돌 뿐!)',250,H-14,'#1864ab',15);
+  const C=2*10*OMEGA*Math.sin(corLat*D2R);
+  $('#corRead').innerHTML=`v = 10 m/s인 공기의 전향력 <span class="c-cor">C = 2vΩsinφ = ${C===0?'0':sci(C)} m/s²</span> · 지금까지 발사한 위도 : <span class="hl">${[...S.inter.cor].sort((a,b)=>a-b).map(x=>x+'°').join(', ')||'없음'}</span><br><span class="muted">원판 위 관찰자에게만 구슬이 휘어 보여요. 구슬의 빠르기는 그대로 — 방향만 바뀌어요!</span>`;
+}
+
+/* =====================================================================
+   STEP 0-3 구심력
+   ===================================================================== */
+const cvCen=$('#cvCen'), xCen=cvCen.getContext('2d'); let cenAng=0, cenView='ext';
+seg('cenView',v=>{cenView=v; S.inter.cen.view=true; refresh();});
+$('#cenR').oninput=()=>{S.inter.cen.r=true;refresh();}; $('#cenV').oninput=()=>{S.inter.cen.v=true;refresh();};
+function cenTick(dt){
+  const c=xCen,W=640,H=400,cx=300,cy=200; const r=+$('#cenR').value, v=+$('#cenV').value;
+  const rkm=r*10, vms=v*5; $('#cenRv').textContent=rkm+' km'; $('#cenVv').textContent=vms+' m/s';
+  const vv=v*16; cenAng+=vv/r*dt;
+  const Fc=vms*vms/(rkm*1000), Fmax=50*50/700000; const L=12+130*Math.sqrt(Fc/Fmax);
+  c.clearRect(0,0,W,H); const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#e7f5ff'); g.addColorStop(1,'#f8f0fc'); c.fillStyle=g; c.fillRect(0,0,W,H);
+  const bgRot=cenView==='rid'?-cenAng:0;
+  for(let i=0;i<26;i++){const a=i*0.9+bgRot, rr=40+(i*37)%180; dot(c,cx+rr*Math.cos(a),cy-rr*Math.sin(a),2.5,'rgba(112,72,232,.25)');}
+  c.setLineDash([6,6]); c.strokeStyle='#adb5bd'; c.lineWidth=1.5; c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.stroke(); c.setLineDash([]);
+  dot(c,cx,cy,6,'#495057'); txt(c,'회전 중심',cx,cy+18,'#495057',13,'center');
+  const a=cenView==='rid'?0:cenAng; const px=cx+r*Math.cos(a), py=cy-r*Math.sin(a);
+  const ix=(cx-px)/r, iy=(cy-py)/r;
+  if(cenView==='ext'){
+    const tx=-Math.sin(a), ty=-Math.cos(a);
+    arrow(c,px,py,px+tx*(20+vv*0.35),py+ty*(20+vv*0.35),COL.wind,4,'속도 v');
+    arrow(c,px,py,px+ix*L,py+iy*L,COL.cen,6,'구심력');
+    txt(c,'외부 관찰자 : 공기 덩어리가 원을 그리며 돌고 있어요',14,22,'#1864ab',15);
+  } else {
+    arrow(c,px,py,px+ix*L,py+iy*L,COL.cen,6); haloText(c,'구심력(합력)',px+ix*L-6,py-18,COL.cen,14);
+    arrow(c,px,py,px-ix*L,py-iy*L,COL.cfg,6); haloText(c,'원심력(겉보기 힘)',px-ix*L+10,py-18,COL.cfg,14);
+    txt(c,'탑승자 시점 : 공기 덩어리는 정지한 듯, 주변 풍경이 돌아요',14,22,'#c25e00',15);
+    txt(c,'구심력과 원심력은 크기가 같고 방향이 반대',14,46,'#5b6b82',14);
+  }
+  dot(c,px,py,12,'#fff','#22324a'); txt(c,'🎈',px,py+1,'#000',14,'center');
+  $('#cenRead').innerHTML=`구심력 <span class="c-cen">F<sub>c</sub> = v²/r = (${vms})² / (${rkm}×10³) = ${sci(Fc)} m/s²</span><br>반지름이 <span class="hl">작을수록</span>, 속력이 <span class="hl">빠를수록</span> 중심 방향 화살표가 커져요. (속력 2배 → 구심력 4배)`;
+}
+
+/* =====================================================================
+   STEP 0-4 마찰력
+   ===================================================================== */
+const cvFri=$('#cvFri'), xFri=cvFri.getContext('2d');
+const SURF={sea:{k:1.0e-5,n:'바다',ic:'🌊',col:'#4dabf7'},plain:{k:3.5e-5,n:'평지',ic:'🌾',col:'#94d82d'},forest:{k:6.5e-5,n:'산림',ic:'🌲',col:'#2f9e44'},city:{k:1.0e-4,n:'도심',ic:'🏙️',col:'#868e96'}};
+let friS='sea', friT=0; S.inter.fri.add('sea');
+seg('friSurf',v=>{friS=v; S.inter.fri.add(v); updFriLog(); refresh();});
+function friCalc(k){const f=2*OMEGA*Math.sin(40*D2R), P=1.1e-3; const d=f*f+k*k; const u=P*f/d, w=P*k/d; return {f,P,u,w,v:Math.hypot(u,w),ang:Math.atan2(w,u)/D2R};}
+function updFriLog(){ let h='<tr><th>지표면</th><th>마찰 계수 k</th><th>풍속</th><th>경각</th></tr>'; Object.keys(SURF).forEach(s=>{ if(!S.inter.fri.has(s)) return; const r=friCalc(SURF[s].k); h+=`<tr><td>${SURF[s].ic} ${SURF[s].n}</td><td>${sci(SURF[s].k,1)} s⁻¹</td><td class="c-wind">${r.v.toFixed(1)} m/s</td><td class="hl">${r.ang.toFixed(0)}°</td></tr>`;}); $('#friLog').innerHTML=h; }
+updFriLog();
+function friTick(dt){
+  friT+=dt; const c=xFri,W=640,H=400; const s=SURF[friS], r=friCalc(s.k);
+  c.clearRect(0,0,W,H); const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#e7f5ff'); g.addColorStop(1,'#f1f8e9'); c.fillStyle=g; c.fillRect(0,0,W,H);
+  [60,135,210,285].forEach((y,i)=>{c.strokeStyle='#495057'; c.lineWidth=1.6; c.beginPath(); c.moveTo(70,y); c.lineTo(W-14,y); c.stroke(); txt(c,(1000+i*4)+' hPa',8,y,'#495057',13);});
+  haloText(c,'저 (L)',W-50,30,'#d6336c',18); haloText(c,'고 (H)',W-50,310,'#1c7ed6',18);
+  c.fillStyle=s.col; c.fillRect(0,H-56,W,56); for(let i=0;i<14;i++) txt(c,s.ic,20+i*46,H-28,'#000',24,'center');
+  // particles
+  const ux=r.u/r.v, uy=-r.w/r.v;
+  for(let i=0;i<22;i++){ const base=(i*61)%W; const d=(friT*r.v*7+i*37)%700; const x=(base+ux*d)%W, y=60+((i*29+uy*d)%225+225)%225; dot(c,x,y,2.5,'rgba(43,138,62,.45)'); }
+  const ox=300, oy=172, sc=105/r.P;
+  c.setLineDash([6,5]); arrow(c,ox,oy,ox+(r.P/r.f)*8.5,oy,'#adb5bd',3); c.setLineDash([]); txt(c,'마찰이 없을 때(지균풍)',ox+(r.P/r.f)*8.5+8,oy+14,'#868e96',12);
+  arrow(c,ox,oy,ox,oy-r.P*sc,COL.pgf,5,'기압 경도력');
+  const cx_=r.f*r.w*sc, cy_=r.f*r.u*sc; arrow(c,ox,oy,ox+cx_,oy+cy_,COL.cor,5,'전향력');
+  const fx=-s.k*r.u*sc, fy=s.k*r.w*sc; arrow(c,ox,oy,ox+fx,oy+fy,COL.fri,5,'마찰력');
+  arrow(c,ox,oy,ox+ux*r.v*8.5,oy+uy*r.v*8.5,COL.wind,6,'바람');
+  c.strokeStyle='#d9480f'; c.lineWidth=2; c.beginPath(); c.arc(ox,oy,46,-r.ang*D2R,0); c.stroke(); haloText(c,'경각 '+r.ang.toFixed(0)+'°',ox+76,oy-14,'#d9480f',14);
+  dot(c,ox,oy,8,'#fff','#22324a');
+  $('#friRead').innerHTML=`${s.ic} ${s.n} : 마찰 계수 <span class="c-fri">k = ${sci(s.k,1)} s⁻¹</span> · 풍속 <span class="c-wind">${r.v.toFixed(1)} m/s</span> · 경각 <span class="hl">${r.ang.toFixed(0)}°</span> <span class="muted">(위도 40°, 같은 기압 경도력)</span><br>세 힘(기압 경도력·전향력·마찰력)의 합력이 0이 되는 방향으로 바람이 불어요. 지표면을 3가지 이상 바꿔 비교해 보세요.`;
+}
+
+/* =====================================================================
+   STEP 0-7 고도 브릿지
+   ===================================================================== */
+const cvBr=$('#cvBr'), xBr=cvBr.getContext('2d');
+const BRS={sea:{h:0.6,a:0.12,t0:12,n:'바다',col:'#1c7ed6'},plain:{h:0.8,a:0.2,t0:25,n:'평지',col:'#66a80f'},city:{h:1.0,a:0.35,t0:40,n:'도심',col:'#868e96'}};
+let brS='sea', brT=0; seg('brSurf',v=>{brS=v;});
+const brV=(s,z)=>{const p=BRS[s]; return z>=p.h?1:Math.pow(Math.max(z,0.01)/p.h,p.a);};
+const brAng=(s,z)=>{const p=BRS[s]; return z>=p.h?0:p.t0*Math.pow(1-z/p.h,1.2);};
+$('#brZ').oninput=()=>{ if(+$('#brZ').value>=1&&!S.bridge){ S.bridge=true; addXP(30); $('#brMsg').classList.add('on'); toast('🎉 자유 대기 도달! 마찰력이 사라졌어요'); refresh(); } };
+function brTick(dt){
+  brT+=dt; const c=xBr,W=680,H=400,z=+$('#brZ').value, p=BRS[brS];
+  $('#brZv').textContent=z.toFixed(2)+' km';
+  c.clearRect(0,0,W,H); c.fillStyle='#fff'; c.fillRect(0,0,W,H);
+  // graph
+  const gx0=56,gx1=300,gy0=360,gy1=30, Z=y=>gy0-(y/2)*(gy0-gy1), X=v=>gx0+v*(gx1-gx0-20);
+  c.fillStyle='#fff5f5'; c.fillRect(gx0,Z(1),gx1-gx0,gy0-Z(1)); c.fillStyle='#e7f5ff'; c.fillRect(gx0,gy1,gx1-gx0,Z(1)-gy1);
+  c.strokeStyle='#495057'; c.lineWidth=1.5; c.beginPath(); c.moveTo(gx0,gy1); c.lineTo(gx0,gy0); c.lineTo(gx1,gy0); c.stroke();
+  [0,0.5,1,1.5,2].forEach(h=>txt(c,h+' km',8,Z(h),'#495057',12));
+  txt(c,'풍속 →',gx1-46,gy0-12,'#495057',12); txt(c,'고도',gx0-6,gy1-14,'#495057',12,'center');
+  c.setLineDash([5,4]); c.strokeStyle='#d6336c'; c.beginPath(); c.moveTo(gx0,Z(1)); c.lineTo(gx1,Z(1)); c.stroke(); c.setLineDash([]);
+  txt(c,'자유 대기 (마찰력 ≈ 0)',gx0+8,gy1+14,'#1864ab',13); txt(c,'대기 경계층',gx0+8,Z(1)+16,'#c2255c',13);
+  Object.keys(BRS).forEach(s=>{ c.strokeStyle=BRS[s].col; c.lineWidth=s===brS?4:1.6; c.globalAlpha=s===brS?1:.55; c.beginPath(); for(let y=0;y<=2.001;y+=0.02){const x=X(brV(s,y)); y?c.lineTo(x,Z(y)):c.moveTo(x,Z(y));} c.stroke(); c.globalAlpha=1;
+    c.setLineDash([2,3]); c.beginPath(); c.moveTo(X(brV(s,BRS[s].h))-14,Z(BRS[s].h)); c.lineTo(X(1)+6,Z(BRS[s].h)); c.stroke(); c.setLineDash([]); });
+  [['sea',0],['plain',1],['city',2]].forEach(([s,i])=>{c.fillStyle=BRS[s].col; c.fillRect(gx0+12+i*80,gy0+26,16,5); txt(c,BRS[s].n,gx0+32+i*80,gy0+29,'#22324a',12);});
+  dot(c,X(brV(brS,z)),Z(z),8,'#ffd43b','#22324a');
+  // plan view
+  const ox=500, oy=200; c.fillStyle='#f8fbff'; c.fillRect(320,10,350,380);
+  [60,140,220,300].forEach(y=>{c.strokeStyle='#adb5bd'; c.lineWidth=1.4; c.beginPath(); c.moveTo(332,y); c.lineTo(660,y); c.stroke();});
+  haloText(c,'저',650,30,'#d6336c',16); haloText(c,'고',650,330,'#1c7ed6',16);
+  const sp=brV(brS,z), ang=brAng(brS,z), fr=z>=p.h?0:(1-z/p.h);
+  const len=40+110*sp, a=-ang*D2R;
+  arrow(c,ox,oy,ox+Math.cos(a)*len,oy+Math.sin(a)*len,COL.wind,6,'바람');
+  if(fr>0.01) arrow(c,ox,oy,ox-Math.cos(a)*70*fr,oy-Math.sin(a)*70*fr,COL.fri,5,'마찰력',Math.max(.25,fr));
+  arrow(c,ox,oy,ox,oy-80,COL.pgf,4,'기압 경도력');
+  const cl=80*Math.cos(ang*D2R)*sp/ (z>=p.h?1:1); arrow(c,ox,oy,ox+Math.sin(ang*D2R)*cl*0.9,oy+Math.cos(ang*D2R)*cl*0.9,COL.cor,4,'전향력');
+  dot(c,ox,oy,8,'#fff','#22324a');
+  txt(c,z>=1?'자유 대기 : 등압선에 나란한 바람':'경계층 : 등압선을 가로지르는 바람',338,370,z>=1?'#1864ab':'#c2255c',14);
+  // clouds/flags decoration
+  if(z>=1) txt(c,'☁️',600+Math.sin(brT)*6,90,'#000',26,'center'); else txt(c,'🚩',360,330,'#000',22,'center');
+  $('#brRead').innerHTML=`고도 <span class="hl">${z.toFixed(2)} km</span> (${p.n}) · 풍속 <span class="c-wind">자유 대기의 ${(sp*100).toFixed(0)}%</span> · 경각 <span class="hl">${ang.toFixed(0)}°</span> · 마찰력 <span class="c-fri">${fr>0?(fr*100).toFixed(0)+'%':'0 (사라짐)'}</span><br><span class="muted">도심(대기 경계층 약 1 km)은 바다(약 0.6 km)보다 마찰의 영향이 더 높은 곳까지 미쳐요.</span>`;
+}
+
+/* =====================================================================
+   STEP 0 문항
+   ===================================================================== */
+function isoTilted(c){ // 저기압이 왼쪽 위
+  const n=[-Math.SQRT1_2,-Math.SQRT1_2], t=[Math.SQRT1_2,-Math.SQRT1_2];
+  [-2,-1,0,1,2].forEach((k,i)=>{const cx=180+n[0]*k*45, cy=130+n[1]*k*45; c.strokeStyle='#495057'; c.lineWidth=1.6; c.beginPath(); c.moveTo(cx-t[0]*260,cy-t[1]*260); c.lineTo(cx+t[0]*260,cy+t[1]*260); c.stroke(); haloText(c,(1012-k*4)+'',cx+t[0]*95,cy+t[1]*95,'#495057',12);});
+  haloText(c,'저',40,30,'#d6336c',18); haloText(c,'고',320,232,'#1c7ed6',18);
+}
+renderDrag('pgf1',{tag:'체크포인트 1 · 드래그',q:'등압선 지도에서 공기 덩어리에 작용하는 <span class="c-pgf">기압 경도력</span>의 방향을 그리세요.',draw:isoTilted,ans:-135,color:COL.pgf,label:'기압 경도력',ex:'기압 경도력은 고기압 → 저기압 방향으로 등압선에 직각으로 작용해요.',fb:'기압이 높은 쪽에서 낮은 쪽으로, 등압선과 직각을 이루는 방향인지 확인해 보세요.'});
+renderMCQ('pgf2',{tag:'체크포인트 2',q:'연직 방향의 기압 차가 수평 방향보다 훨씬 큰데도 공기가 위로 강하게 불어 올라가지 않는 까닭은?',o:['공기가 너무 무거워 움직일 수 없기 때문','연직 기압 경도력이 중력과 크기가 같고 방향이 반대여서 정역학 평형을 이루기 때문','전향력이 연직 방향으로 작용해 상승을 막기 때문','상층으로 갈수록 기압이 커지기 때문'],a:1,ex:'연직 기압 경도력(위)과 중력(아래)이 평형(ΔP = ρgΔz)을 이루어 상쇄되기 때문이에요.',fb:{0:'공기는 가벼운 기체이며 기압 차가 있으면 움직일 수 있어요. 연직 단면 보기에서 두 화살표를 비교해 보세요.',2:'전향력은 수평 운동에 작용하는 겉보기 힘이에요. 연직 단면 보기의 아래쪽 화살표는 무엇인가요?',3:'상층으로 갈수록 기압은 낮아져요. 그래서 연직 기압 경도력은 위쪽을 향해요.'}});
+renderMCQ('cor1',{tag:'체크포인트 1',q:'북반구에서 동쪽으로 이동하는 공기에 작용하는 <span class="c-cor">전향력</span>의 방향은?',o:['북쪽','남쪽','동쪽','서쪽'],a:1,ex:'북반구에서는 진행 방향의 오른쪽 직각으로 작용해요. 동쪽으로 갈 때 오른쪽은 남쪽!',fb:{0:'북쪽은 진행 방향의 왼쪽이에요. 북반구 원판(반시계 회전)에서 구슬이 진행 방향의 어느 쪽으로 휘었나요?',2:'전향력은 운동 방향에 직각으로 작용해요. 진행 방향과 같은 방향일 수 없어요.',3:'전향력은 운동 방향에 직각으로 작용해 속력을 바꾸지 않아요.'}});
+renderMCQ('cor2',{tag:'체크포인트 2',q:'같은 속력으로 움직이는 공기에 작용하는 전향력이 더 큰 곳은?',o:['적도(0°)','위도 30°','두 곳이 같다'],a:1,ex:'C = 2vΩsinφ에서 sin0° = 0, sin30° = 0.5이므로 위도 30°가 더 커요. 적도에서는 전향력이 0이에요.',fb:'C = 2vΩsinφ 식에서 sinφ 값을 비교해 보세요. 적도에서 발사한 구슬은 어떻게 날아갔나요?'});
+renderMCQ('cen1',{tag:'체크포인트 1',q:'원운동하는 공기 덩어리를 외부 관찰자가 보면 회전 중심 방향으로 (가)가 작용하고, 함께 도는 탑승자는 바깥쪽으로 밀리는 (나)를 느낀다. (가), (나)는?',o:['(가) 구심력, (나) 원심력','(가) 원심력, (나) 구심력','(가) 전향력, (나) 구심력','(가) 기압 경도력, (나) 마찰력'],a:0,ex:'중심 방향은 구심력, 탑승자가 느끼는 바깥 방향의 겉보기 힘은 원심력이에요.',fb:'시점 전환 토글로 외부 관찰자와 탑승자 화면을 번갈아 보며 화살표 이름을 확인해 보세요.'});
+renderMCQ('cen2',{tag:'체크포인트 2',q:'상층의 곡선(원형) 등압선 부근에서 <span class="c-cen">구심력</span>을 만들어 내는 두 힘은?',o:['기압 경도력과 전향력','마찰력과 전향력','중력과 마찰력','원심력과 마찰력'],a:0,ex:'구심력은 독립된 힘이 아니라 기압 경도력과 전향력의 차이(합력)로 나타나요.',fb:'상층에서는 마찰력을 무시할 수 있어요. 남는 수평 방향의 실제 힘 두 가지는?'});
+renderMCQ('fri1',{tag:'체크포인트 1',q:'기압 차가 같을 때 풍속이 더 빠르고 경각이 더 작은 곳은?',o:['해양','육지','두 곳이 같다'],a:0,ex:'해양은 마찰 계수가 작아 풍속 감소가 적고, 바람이 등압선과 이루는 각도 작아요.',fb:'지표면 재질 선택기의 기록표에서 바다와 도심의 풍속·경각을 비교해 보세요.'});
+renderOrder('fri2',{tag:'체크포인트 2 · 순서 배열',q:'지표면이 거칠어질 때 일어나는 변화를 원인 → 결과 순서대로 클릭하세요.',items:['마찰력 증가','풍속 감소','전향력 감소','경각 증가(등압선을 더 많이 가로지름)'],show:[2,0,3,1],ex:'마찰력↑ → 풍속↓ → (풍속에 비례하는) 전향력↓ → 기압 경도력 쪽으로 더 기울어 경각↑',fb:'전향력의 크기는 풍속에 비례한다는 점을 떠올려 보세요.'});
+
+function isoH(c,lowTop=true){[50,110,170,230].forEach((y,i)=>{c.strokeStyle='#495057';c.lineWidth=1.5;c.beginPath();c.moveTo(20,y);c.lineTo(340,y);c.stroke(); haloText(c,(lowTop?844+i*4:856-i*4)+' hPa',300,y-9,'#868e96',11);}); haloText(c,'저',30,22,'#d6336c',16); haloText(c,'고',30,246,'#1c7ed6',16);}
+
+
+const CP={pgf:['pgf1','pgf2'],cor:['cor1','cor2'],cen:['cen1','cen2'],fri:['fri1','fri2']};
+const VEC=['vq1','vq2','vq3','vq4','vq5'], OX=['ox1','ox2','ox3','ox4'];
+function interDone(t){ if(t==='pgf') return S.inter.pgf.slide&&S.inter.pgf.vert; if(t==='cor') return S.inter.cor.size>=2; if(t==='cen'){const c=S.inter.cen; return c.r&&c.v&&c.view;} if(t==='fri') return S.inter.fri.size>=3; }
+function tabDone(t){ if(CP[t]) return interDone(t)&&CP[t].every(done); if(t==='vec') return VEC.every(done); if(t==='ox') return OX.every(done); if(t==='bridge') return S.bridge; }
+function interLabel(t){ return {pgf:['간격·기압 차 조절', S.inter.pgf.slide, '연직 단면 관찰', S.inter.pgf.vert], cor:['서로 다른 위도 2곳 이상 발사 ('+S.inter.cor.size+'/2)', S.inter.cor.size>=2], cen:['반지름 조절',S.inter.cen.r,'속력 조절',S.inter.cen.v,'시점 전환',S.inter.cen.view], fri:['지표면 3종 이상 비교 ('+S.inter.fri.size+'/3)',S.inter.fri.size>=3]}[t]; }
+
+
+
+function refresh(){
+  $$('#s0nav button').forEach(b=>b.classList.toggle('done',!!tabDone(b.dataset.t)));
+  ['pgf','cor','cen','fri'].forEach(t=>{ const L=interLabel(t); let h=''; for(let i=0;i<L.length;i+=2) h+=`<li class="${L[i+1]?'y':''}">${L[i+1]?'✔':'○'} ${L[i]}</li>`; CP[t].forEach((k,i)=>h+=`<li class="${done(k)?'y':''}">${done(k)?'✔':'○'} 체크포인트 ${i+1}</li>`); $('#chk-'+t).innerHTML=h; });
+  $('#chk-bridge').innerHTML=`<li class="${S.bridge?'y':''}">${S.bridge?'✔':'○'} 고도 1 km 이상 도달</li>`;
+  if(S.bridge) $('#brMsg').classList.add('on');
+  const npcMsg={pgf:'등압선 간격과 기압 차를 바꿔 보고, <span class="hl">연직 단면</span>도 꼭 확인해 봐!',cor:'위도를 바꿔 가며 구슬을 쏴 봐. <span class="hl">적도</span>에서는 어떻게 될까? 시점을 <span class="hl2">우주 관찰자</span>로 바꿔 보는 것도 잊지 마!',cen:'반지름과 속력을 바꾸고, <span class="hl">탑승자 시점</span>으로도 전환해 봐!',fri:'바다부터 도심까지 지표면을 바꾸며 <span class="hl">경각</span>이 어떻게 변하는지 살펴봐.',bridge:'고도를 <span class="hl">1 km 위</span>로 올려 마찰력이 사라지는 순간을 확인해!'};
+  $('#npc0').innerHTML=npcMsg[S.s0tab];
+}
+let lastT=performance.now();
+function loop(t){ const dt=Math.min(0.05,(t-lastT)/1000); lastT=t; try{ ({pgf:pgfTick,cor:corTick,cen:cenTick,fri:friTick,bridge:brTick}[S.s0tab]||(()=>{}))(dt); }catch(e){console.error(e);} requestAnimationFrame(loop); }
+goTab('pgf'); refresh(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>
